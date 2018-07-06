@@ -10,7 +10,7 @@ from six import text_type
 
 from student.models import CourseEnrollment, User
 
-from common.djangoapps.student.models import CourseEnrollmentAttribute
+from student.models import CourseEnrollmentAttribute
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -113,17 +113,17 @@ class Command(BaseCommand):
                 enrollment_args['user'] = User.objects.get(**user_args)
                 enrollments = CourseEnrollment.objects.filter(**enrollment_args)
 
-                enrollment_attrs = {}
+                enrollment_attrs = []
                 with transaction.atomic():
                     for enrollment in enrollments:
                         enrollment.update_enrollment(mode=options['to_mode'])
                         enrollment.save()
                         if options['to_mode'] == 'credit':
-                            enrollment_attrs = {
+                            enrollment_attrs.append({
                                 'namespace': 'credit',
                                 'name': 'provider_id',
-                                'value': enrollment_args['course_id'],
-                            }
+                                'value': enrollment_args['course_id'].org,
+                            })
                             CourseEnrollmentAttribute.add_enrollment_attr(enrollment=enrollment,
                                                                           data_list=enrollment_attrs)
 
